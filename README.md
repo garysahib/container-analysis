@@ -61,6 +61,8 @@ This is what this script does:
     - Slack notifications
     - Email alerts
     - Rich console output
+11. **Keverno policy**
+12. **Java runtime dependency analysis**
 
 
 
