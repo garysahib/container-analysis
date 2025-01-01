@@ -1,0 +1,72 @@
+name: Kyverno Policy Pipeline
+
+on:
+  push:
+    paths:
+      - 'infrastructure/policies/**'
+      - 'infrastructure/environments/**'
+    branches:
+      - main
+      - develop
+  pull_request:
+    paths:
+      - 'infrastructure/policies/**'
+      - 'infrastructure/environments/**'
+
+env:
+  KYVERNO_VERSION: v1.11.0
+  KUBECONFIG: ${{ secrets.KUBECONFIG }}
+
+jobs:
+  validate:
+    name: Validate Policies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Kyverno CLI
+        run: |
+          wget https://github.com/kyverno/kyverno/releases/download/${{ env.KYVERNO_VERSION }}/kyverno-cli_${{ env.KYVERNO_VERSION }}_linux_x86_64.tar.gz
+          tar -xvf kyverno-cli_${{ env.KYVERNO_VERSION }}_linux_x86_64.tar.gz
+          sudo mv kyverno /usr/local/bin/
+
+      - name: Validate Kyverno Policies
+        run: |
+          cd infrastructure
+          ./scripts/validate-policies.sh
+
+  deploy-dev:
+    needs: validate
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        
+      - name: Deploy to Dev
+        run: |
+          cd infrastructure
+          ./scripts/apply-policies.sh dev
+        env:
+          KUBECONFIG: ${{ secrets.DEV_KUBECONFIG }}
+
+  deploy-prod:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        
+      - name: Deploy to Production
+        run: |
+          cd infrastructure
+          ./scripts/apply-policies.sh prod
+        env:
+          KUBECONFIG: ${{ secrets.PROD_KUBECONFIG }}
