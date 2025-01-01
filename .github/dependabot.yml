@@ -1,0 +1,126 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+
+
+version: 2
+updates:
+  # Python package dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    
+    # Labels on pull requests
+    labels:
+      - "dependencies"
+      - "python"
+      - "security"
+    
+    # Assign reviewers
+    reviewers:
+      - "security-team"
+      - "python-team"
+    
+    # Configure version updates
+    versioning-strategy: "lockfile-only"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    
+    # Security updates
+    open-pull-requests-limit: 10
+    pull-request-branch-name:
+      separator: "-"
+    
+    # Update requirements for development dependencies
+    ignore:
+      # Ignore updates to packages that start with 'dev-'
+      - dependency-name: "dev-*"
+        update-types: ["version-update:semver-minor", "version-update:semver-patch"]
+      
+      # Ignore certain packages
+      - dependency-name: "pytest"
+        versions: [">=7.0.0"]
+    
+    commit-message:
+      prefix: "pip"
+      prefix-development: "dev"
+      include: "scope"
+    
+    security-updates-only: false
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    
+    labels:
+      - "dependencies"
+      - "docker"
+      - "security"
+    
+    reviewers:
+      - "security-team"
+      - "devops-team"
+    
+    # Update base images
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-minor"]
+    
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    
+    labels:
+      - "dependencies"
+      - "github-actions"
+    
+    commit-message:
+      prefix: "github-actions"
+      include: "scope"
+
+  # Additional pip requirements in subdirectories
+  - package-ecosystem: "pip"
+    directory: "/api"  # API service requirements
+    schedule:
+      interval: "weekly"
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "dependencies"
+      - "api"
+    
+  - package-ecosystem: "pip"
+    directory: "/tests"  # Test requirements
+    schedule:
+      interval: "monthly"  # Less frequent updates for test dependencies
+    versioning-strategy: "lockfile-only"
+    labels:
+      - "dependencies"
+      - "testing"
+
+# Custom commit message configuration
+commit-message:
+  # Include a link to the dependency update in the commit message
+  prefix: "deps"
+  prefix-development: "dev"
+  include: "scope"
