@@ -1,0 +1,185 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: kubernetes-security-best-practices
+  annotations:
+    policies.kyverno.io/title: Kubernetes Security Best Practices
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/severity: high
+    policies.kyverno.io/description: >-
+      This policy enforces security best practices for Kubernetes workloads
+spec:
+  validationFailureAction: enforce
+  background: true
+  rules:
+    # Rule 1: Require non-root user
+    - name: require-non-root-user
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Running containers as root user is not allowed"
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  runAsNonRoot: true
+
+    # Rule 2: Disallow privileged containers
+    - name: disallow-privileged-containers
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Privileged containers are not allowed"
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  privileged: false
+
+    # Rule 3: Require memory limits and requests
+    - name: require-memory-limits
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Memory limits and requests are required"
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits:
+                    memory: "?*"
+                  requests:
+                    memory: "?*"
+
+    # Rule 4: Require CPU limits and requests
+    - name: require-cpu-limits
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "CPU limits and requests are required"
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  limits:
+                    cpu: "?*"
+                  requests:
+                    cpu: "?*"
+
+    # Rule 5: Disallow host path volumes
+    - name: disallow-host-path
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Host path volumes are not allowed"
+        pattern:
+          spec:
+            =(volumes):
+              - =(hostPath): null
+
+    # Rule 6: Require latest security patches
+    - name: require-image-tag
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Using 'latest' tag is not allowed"
+        pattern:
+          spec:
+            containers:
+              - image: "*:!latest"
+
+    # Rule 7: Enforce secure networking
+    - name: restrict-host-network-ports
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Host network and ports are restricted"
+        pattern:
+          spec:
+            =(hostNetwork): false
+            =(hostPorts): null
+
+    # Rule 8: Require security context
+    - name: require-security-context
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Security context must be set"
+        pattern:
+          spec:
+            containers:
+              - securityContext:
+                  capabilities:
+                    drop: ["ALL"]
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+
+    # Rule 9: Enforce network policies
+    - name: require-network-policy
+      match:
+        any:
+        - resources:
+            kinds:
+              - NetworkPolicy
+      validate:
+        message: "Network policies must specify both ingress and egress rules"
+        pattern:
+          spec:
+            policyTypes: 
+              - Ingress
+              - Egress
+
+    # Rule 10: Block unauthorized registries
+    - name: allowed-registries
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Image must be from an authorized registry"
+        pattern:
+          spec:
+            containers:
+              - image: "registry.company.com/*"
+
+    # Rule 11: Enforce Pod Security Standards
+    - name: pod-security-standards
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      validate:
+        message: "Pod must conform to restricted security standards"
+        pattern:
+          spec:
+            securityContext:
+              seccompProfile:
+                type: "RuntimeDefault"
+              fsGroup: "?*"
+              supplementalGroups: ["?*"]
