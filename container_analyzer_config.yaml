@@ -1,0 +1,33 @@
+```yaml
+parallel_scans: true
+max_workers: 3
+severity_threshold: MEDIUM
+export_formats:
+  - json
+  - html
+  - pdf
+notification:
+  slack_webhook: ""
+  email: ""
+metrics:
+  enabled: true
+  port: 9090
+kubernetes:
+  enabled: false
+  context: ""
+jenkins:
+  enabled: false
+  url: ""
+  username: ""
+  token: ""
+compliance:
+  frameworks:
+    - cis
+    - nist
+runtime_analysis:
+  enabled: true
+  duration: 300
+network_scan:
+  enabled: true
+  ports: "1-65535"
+```

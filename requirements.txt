@@ -1,0 +1,11 @@
+```text
+kubernetes
+jenkins-python
+prometheus_client
+rich
+pyyaml
+ruamel.yaml
+python-nmap
+requests
+dataclasses
+```
